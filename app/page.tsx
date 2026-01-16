@@ -82,6 +82,17 @@ const RETURNS: Record<BetType, number> = {
 
 const CHIPS = [1, 5, 10, 25, 100];
 
+const UI = {
+  panelBg: "#f9fafb",
+  panelBorder: "#e5e7eb",
+  text: "#0f172a",
+  muted: "#475569",
+  soft: "#f3f4f6",
+  buttonBorder: "#cbd5e1",
+  cardBg: "#ffffff",
+};
+
+
 /* =======================
    Helpers
 ======================= */
@@ -333,410 +344,467 @@ export default function Page() {
   }
 
   const canPlay = boardTotal() > 0 && !isDealing;
+  const START_BALANCE = 100;
+const sessionPL = clampMoney(balance - START_BALANCE);
+
 
   return (
-    <div style={{ maxWidth: 980, margin: "0 auto", padding: 20, fontFamily: "system-ui, Arial" }}>
-      <h1 style={{ marginBottom: 6 }}>Card Roulette</h1>
+    // ✅ Casino background wrapper
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "radial-gradient(circle at top, #1f2933 0%, #0f172a 70%)",
+        padding: 20,
+        fontFamily: "system-ui, Arial",
+      }}
+    >
+      <div style={{ maxWidth: 980, margin: "0 auto" }}>
+        <h1 style={{ marginBottom: 6, color: "#f8fafc" }}>Card Roulette</h1>
 
-      <style jsx global>{`
-        button {
-          background-color: #ffffff;
-          color: #111111;
-        }
-        button:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
+        <style jsx global>{`
+          button {
+  background-color: ${UI.soft};
+  color: ${UI.text};
+  border: 1px solid ${UI.buttonBorder};
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
-        /* ✅ Deal animation */
-        .card {
-          transform: perspective(800px) rotateY(90deg) translateY(6px);
-          opacity: 0;
-          transition: transform 260ms ease, opacity 260ms ease, box-shadow 260ms ease;
-          will-change: transform, opacity;
-        }
 
-        .card.revealed {
-          transform: perspective(800px) rotateY(0deg) translateY(0px);
-          opacity: 1;
-        }
+          /* ✅ Deal animation */
+          .card {
+            transform: perspective(800px) rotateY(90deg) translateY(6px);
+            opacity: 0;
+            transition: transform 260ms ease, opacity 260ms ease, box-shadow 260ms ease;
+            will-change: transform, opacity;
+          }
 
-        /* subtle casino highlights */
-        .card.jokerGlow {
-          box-shadow: 0 0 0 2px rgba(6, 95, 70, 0.18);
-        }
-        .card.royalGlow {
-          box-shadow: 0 0 0 2px rgba(161, 98, 7, 0.18);
-        }
-      `}</style>
+          .card.revealed {
+            transform: perspective(800px) rotateY(0deg) translateY(0px);
+            opacity: 1;
+          }
 
-      <p style={{ marginTop: 0, opacity: 0.8 }}>
-        54-card deck (52 + 2 jokers). Split draws N cards. Payout scales with wins.
-      </p>
+          /* subtle casino highlights */
+          .card.jokerGlow {
+            box-shadow: 0 0 0 2px rgba(6, 95, 70, 0.18);
+          }
+          .card.royalGlow {
+            box-shadow: 0 0 0 2px rgba(161, 98, 7, 0.18);
+          }
+        `}</style>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
-        {/* Left */}
-        <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-            <div>
-              <div style={{ fontSize: 12, opacity: 0.7 }}>Balance</div>
-              <div style={{ fontSize: 28, fontWeight: 800 }}>£{balance.toFixed(2)}</div>
-            </div>
+        <p style={{ marginTop: 0, color: "#cbd5e1" }}>
+          54-card deck (52 + 2 jokers). Split draws N cards. Payout scales with wins.
+        </p>
 
-            <div style={{ display: "flex", gap: 10, alignItems: "end" }}>
-              <button
-                onClick={reset}
-                disabled={isDealing}
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #bbb",
-                  backgroundColor: "#f3f4f6",
-                  fontWeight: 800,
-                  cursor: isDealing ? "not-allowed" : "pointer",
-                }}
-              >
-                Reset
-              </button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
+          {/* Left */}
+          <div
+            style={{
+              backgroundColor: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              borderRadius: 14,
+              padding: 16,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: 12, color: "#475569" }}>Balance</div>
+<div style={{ fontSize: 28, fontWeight: 900, color: "#0f172a" }}>£{balance.toFixed(2)}</div>
+<div style={{ marginTop: 6, fontSize: 13, fontWeight: 900, color: sessionPL >= 0 ? "#065f46" : "#7f1d1d" }}>
+  Session Balance: {sessionPL >= 0 ? "+" : "-"}£{Math.abs(sessionPL).toFixed(2)}
+</div>
 
-              <button
-                onClick={playRound}
-                disabled={!canPlay}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "none",
-                  backgroundColor: canPlay ? "#16a34a" : "#9ca3af",
-                  color: "#fff",
-                  cursor: canPlay ? "pointer" : "not-allowed",
-                  fontWeight: 900,
-                }}
-              >
-                {isDealing ? "Dealing..." : "Deal"}
-              </button>
-            </div>
-          </div>
 
-          {/* Chips */}
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>Chips</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {CHIPS.map((chip) => (
+              </div>
+
+              <div style={{ display: "flex", gap: 10, alignItems: "end" }}>
                 <button
-                  key={chip}
-                  onClick={() => setSelectedChip(chip)}
+                  onClick={reset}
                   disabled={isDealing}
                   style={{
-                    padding: "10px 14px",
-                    borderRadius: "999px",
-                    border: "2px solid #222",
-                    fontWeight: 900,
-                    backgroundColor: selectedChip === chip ? "#222" : "#f5f5f5",
-                    color: selectedChip === chip ? "#fff" : "#111",
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "1px solid #bbb",
+                    backgroundColor: "#f3f4f6",
+                    fontWeight: 800,
                     cursor: isDealing ? "not-allowed" : "pointer",
                   }}
                 >
-                  £{chip}
+                  Reset
                 </button>
-              ))}
-            </div>
 
-            <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "end", gap: 10 }}>
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.7 }}>Total placed</div>
-                <div style={{ fontSize: 24, fontWeight: 900 }}>£{boardTotal().toFixed(2)}</div>
+                <button
+                  onClick={playRound}
+                  disabled={!canPlay}
+                  style={{
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    border: "none",
+                    backgroundColor: canPlay ? "#16a34a" : "#9ca3af",
+                    color: "#fff",
+                    cursor: canPlay ? "pointer" : "not-allowed",
+                    fontWeight: 900,
+                  }}
+                >
+                  {isDealing ? "Dealing..." : "Deal"}
+                </button>
               </div>
-
-              <button
-                onClick={clearBoardRefund}
-                disabled={boardTotal() === 0 || isDealing}
-                style={{
-                  padding: "8px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #bbb",
-                  backgroundColor: "#f3f4f6",
-                  fontWeight: 800,
-                  cursor: boardTotal() === 0 || isDealing ? "not-allowed" : "pointer",
-                }}
-              >
-                Clear board (refund)
-              </button>
-            </div>
-          </div>
-
-          <hr style={{ margin: "16px 0" }} />
-
-          {/* Board */}
-          <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 10 }}>
-              Bet board (click to place £{selectedChip})
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-              {(
-                [
-                  { key: "RED", label: "RED", sub: "2×" },
-                  { key: "BLACK", label: "BLACK", sub: "2×" },
-                  { key: "ROYAL", label: "ROYAL", sub: "3.25×" },
-                  { key: "SUIT_hearts", label: "♥ Hearts", sub: "4×" },
-                  { key: "SUIT_diamonds", label: "♦ Diamonds", sub: "4×" },
-                  { key: "SUIT_clubs", label: "♣ Clubs", sub: "4×" },
-                  { key: "SUIT_spades", label: "♠ Spades", sub: "4×" },
-                  { key: "JOKER", label: "🃏 Jokers", sub: "20×" },
-                ] as const
-              ).map((b) => {
-                const amt = boardBets[b.key as BoardBetKey] ?? 0;
-                return (
+            {/* Chips */}
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 12, color: "#475569", marginBottom: 6 }}>Chips</div>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {CHIPS.map((chip) => (
                   <button
-                    key={b.key}
-                    onClick={() => placeBoardChip(b.key as BoardBetKey)}
+                    key={chip}
+                    onClick={() => setSelectedChip(chip)}
                     disabled={isDealing}
                     style={{
-                      textAlign: "left",
-                      padding: 12,
-                      borderRadius: 12,
-                      border: "1px solid #bbb",
-                      backgroundColor: amt > 0 ? "#eef2ff" : "#fafafa",
-                      color: "#111",
+                      padding: "10px 14px",
+                      borderRadius: "999px",
+                      border: "2px solid #222",
+                      fontWeight: 900,
+                      backgroundColor: selectedChip === chip ? "#222" : "#f5f5f5",
+                      color: selectedChip === chip ? "#fff" : "#111",
                       cursor: isDealing ? "not-allowed" : "pointer",
                     }}
-                    title={`Placed £${amt.toFixed(2)}`}
                   >
-                    <div style={{ fontWeight: 900 }}>{b.label}</div>
-                    <div style={{ fontSize: 12, opacity: 0.7 }}>{b.sub}</div>
-                    <div style={{ marginTop: 6, fontSize: 12 }}>
-                      Placed: <b>£{amt.toFixed(2)}</b>
-                    </div>
+                    £{chip}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+
+              <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "end", gap: 10 }}>
+                <div>
+                 <div style={{ fontSize: 12, color: "#475569" }}>Total placed</div>
+<div style={{ fontSize: 24, fontWeight: 900, color: "#0f172a" }}>£{boardTotal().toFixed(2)}</div>
+
+                </div>
+
+                <button
+                  onClick={clearBoardRefund}
+                  disabled={boardTotal() === 0 || isDealing}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    border: "1px solid #bbb",
+                    backgroundColor: "#f3f4f6",
+                    fontWeight: 800,
+                    cursor: boardTotal() === 0 || isDealing ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Clear board (refund)
+                </button>
+              </div>
             </div>
 
-            {/* Rank strip */}
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 6 }}>Number (rank) — 10×</div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {ranks.map((r) => {
-                  const key = `RANK_${r}` as BoardBetKey;
-                  const amt = boardBets[key] ?? 0;
+            <hr style={{ margin: "16px 0", borderColor: "#e5e7eb", opacity: 0.6 }} />
+
+            {/* Board */}
+            <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+              <div style={{ fontSize: 12, color: "#475569", marginBottom: 10 }}>
+                Bet board (click to place £{selectedChip})
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                {(
+                  [
+                    { key: "RED", label: "RED", sub: "2×" },
+                    { key: "BLACK", label: "BLACK", sub: "2×" },
+                    { key: "ROYAL", label: "ROYAL", sub: "3.25×" },
+                    { key: "SUIT_hearts", label: "♥ Hearts", sub: "4×" },
+                    { key: "SUIT_diamonds", label: "♦ Diamonds", sub: "4×" },
+                    { key: "SUIT_clubs", label: "♣ Clubs", sub: "4×" },
+                    { key: "SUIT_spades", label: "♠ Spades", sub: "4×" },
+                    { key: "JOKER", label: "🃏 Jokers", sub: "20×" },
+                  ] as const
+                ).map((b) => {
+                  const amt = boardBets[b.key as BoardBetKey] ?? 0;
                   return (
                     <button
-                      key={r}
-                      onClick={() => placeBoardChip(key)}
+                      key={b.key}
+                      onClick={() => placeBoardChip(b.key as BoardBetKey)}
                       disabled={isDealing}
                       style={{
-                        padding: "8px 10px",
-                        borderRadius: 10,
+                        textAlign: "left",
+                        padding: 12,
+                        borderRadius: 12,
                         border: "1px solid #bbb",
                         backgroundColor: amt > 0 ? "#eef2ff" : "#fafafa",
                         color: "#111",
-                        fontWeight: 900,
                         cursor: isDealing ? "not-allowed" : "pointer",
                       }}
                       title={`Placed £${amt.toFixed(2)}`}
                     >
-                      {r}
+                      <div style={{ fontWeight: 900 }}>{b.label}</div>
+                      <div style={{ fontSize: 12, color: "#475569" }}>{b.sub}</div>
+                      <div style={{ marginTop: 6, fontSize: 12 }}>
+                        Placed: <b>£{amt.toFixed(2)}</b>
+                      </div>
                     </button>
                   );
                 })}
               </div>
-            </div>
 
-            {/* Exact card */}
-            <div style={{ marginTop: 12, border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
-              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 8 }}>Exact card — 50×</div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <label>
-                  <div style={{ fontSize: 12, opacity: 0.7 }}>Rank</div>
-                  <select
-                    value={exactRank}
-                    onChange={(e) => setExactRank(e.target.value as any)}
-                    disabled={isDealing}
-                    style={{
-                      width: "100%",
-                      padding: 10,
-                      borderRadius: 10,
-                      border: "1px solid #ccc",
-                      backgroundColor: "#fff",
-                      color: "#111",
-                    }}
-                  >
-                    {ranks.map((r) => (
-                      <option key={r} value={r}>
+              {/* Rank strip */}
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 12, color: "#475569", marginBottom: 6 }}>Number (rank) — 10×</div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {ranks.map((r) => {
+                    const key = `RANK_${r}` as BoardBetKey;
+                    const amt = boardBets[key] ?? 0;
+                    return (
+                      <button
+                        key={r}
+                        onClick={() => placeBoardChip(key)}
+                        disabled={isDealing}
+                        style={{
+                          padding: "8px 10px",
+                          borderRadius: 10,
+                          border: "1px solid #bbb",
+                          backgroundColor: amt > 0 ? "#eef2ff" : "#fafafa",
+                          color: "#111",
+                          fontWeight: 900,
+                          cursor: isDealing ? "not-allowed" : "pointer",
+                        }}
+                        title={`Placed £${amt.toFixed(2)}`}
+                      >
                         {r}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  <div style={{ fontSize: 12, opacity: 0.7 }}>Suit</div>
-                  <select
-                    value={exactSuit}
-                    onChange={(e) => setExactSuit(e.target.value as any)}
-                    disabled={isDealing}
-                    style={{
-                      width: "100%",
-                      padding: 10,
-                      borderRadius: 10,
-                      border: "1px solid #ccc",
-                      backgroundColor: "#fff",
-                      color: "#111",
-                    }}
-                  >
-                    {suits.map((s) => (
-                      <option key={s} value={s}>
-                        {s} {suitSymbol(s)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <button
-                onClick={placeExactCard}
+              {/* Exact card */}
+              <div style={{ marginTop: 12, border: "1px solid #e5e7eb", borderRadius: 12, padding: 12 }}>
+                <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Exact card — 50×</div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <label>
+                    <div style={{ fontSize: 12, color: "#475569" }}>Rank</div>
+                    <select
+                      value={exactRank}
+                      onChange={(e) => setExactRank(e.target.value as any)}
+                      disabled={isDealing}
+                      style={{
+                        width: "100%",
+                        padding: 10,
+                        borderRadius: 10,
+                        border: "1px solid #ccc",
+                        backgroundColor: "#fff",
+                        color: "#111",
+                      }}
+                    >
+                      {ranks.map((r) => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
+                    <div style={{ fontSize: 12, color: "#475569" }}>Suit</div>
+                    <select
+                      value={exactSuit}
+                      onChange={(e) => setExactSuit(e.target.value as any)}
+                      disabled={isDealing}
+                      style={{
+                        width: "100%",
+                        padding: 10,
+                        borderRadius: 10,
+                        border: "1px solid #ccc",
+                        backgroundColor: "#fff",
+                        color: "#111",
+                      }}
+                    >
+                      {suits.map((s) => (
+                        <option key={s} value={s}>
+                          {s} {suitSymbol(s)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <button
+                  onClick={placeExactCard}
+                  disabled={isDealing}
+                  style={{
+                    marginTop: 10,
+                    width: "100%",
+                    padding: "10px 12px",
+                    borderRadius: 10,
+                    border: "1px solid #bbb",
+                    backgroundColor: "#f3f4f6",
+                    color: "#111",
+                    fontWeight: 900,
+                    cursor: isDealing ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Place exact: {exactRank}
+                  {suitSymbol(exactSuit)} (adds £{selectedChip})
+                </button>
+
+                <div style={{ marginTop: 8, fontSize: 12, color: "#475569" }}>
+                  Click “Place exact” repeatedly to stack chips on the same exact-card bet.
+                </div>
+              </div>
+            </div>
+
+            <hr style={{ margin: "16px 0", borderColor: "#e5e7eb", opacity: 0.6 }} />
+
+            {/* Split */}
+            <label>
+              <div style={{ fontSize: 12, color: "#475569" }}>Split (cards drawn)</div>
+              <input
+                type="number"
+                min={1}
+                max={54}
+                step={1}
+                value={split}
+                onChange={(e) => setSplit(Number(e.target.value))}
                 disabled={isDealing}
                 style={{
-                  marginTop: 10,
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "1px solid #bbb",
-                  backgroundColor: "#f3f4f6",
-                  color: "#111",
-                  fontWeight: 900,
-                  cursor: isDealing ? "not-allowed" : "pointer",
-                }}
-              >
-                Place exact: {exactRank}
-                {suitSymbol(exactSuit)} (adds £{selectedChip})
-              </button>
+  width: "100%",
+  padding: 10,
+  borderRadius: 10,
+  border: "1px solid #cbd5e1",
+  backgroundColor: "#fff",
+  color: "#0f172a",
+  fontWeight: 800,
+}}
 
-              <div style={{ marginTop: 8, fontSize: 12, opacity: 0.7 }}>
-                Click “Place exact” repeatedly to stack chips on the same exact-card bet.
-              </div>
+              />
+            </label>
+
+            <div style={{ marginTop: 12, fontSize: 12, color: "#64748b" }}>
+              Payout formula per bet: <b>stake × return × (wins / split)</b>
             </div>
           </div>
 
-          <hr style={{ margin: "16px 0" }} />
+          {/* Right */}
+          <div
+            style={{
+              backgroundColor: "#f9fafb",
+              border: "1px solid #e5e7eb",
+              borderRadius: 14,
+              padding: 16,
+              boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
+            }}
+          >
+            <h2 style={{ marginTop: 0, marginBottom: 10, fontSize: 18, color: "#0f172a" }}>Last round</h2>
 
-          {/* Split */}
-          <label>
-            <div style={{ fontSize: 12, opacity: 0.7 }}>Split (cards drawn)</div>
-            <input
-              type="number"
-              min={1}
-              max={54}
-              step={1}
-              value={split}
-              onChange={(e) => setSplit(Number(e.target.value))}
-              disabled={isDealing}
-              style={{ width: "100%", padding: 10, borderRadius: 10, border: "1px solid #ccc" }}
-            />
-          </label>
 
-          <div style={{ marginTop: 12, fontSize: 12, opacity: 0.75 }}>
-            Payout formula per bet: <b>stake × return × (wins / split)</b>
-          </div>
-        </div>
+            {lastDraw ? (
+              <>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {lastDraw.map((c, idx) => {
+                    const revealed = idx < revealedCount;
 
-        {/* Right */}
-        <div style={{ border: "1px solid #ddd", borderRadius: 12, padding: 16 }}>
-          <h2 style={{ marginTop: 0, marginBottom: 10, fontSize: 18 }}>Last round</h2>
+                    const isJoker = c.suit === "joker";
+                    const isRoyalCard =
+                      !isJoker && (c.rank === "A" || c.rank === "K" || c.rank === "Q" || c.rank === "J");
 
-          {lastDraw ? (
-            <>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {lastDraw.map((c, idx) => {
-                  const revealed = idx < revealedCount;
+                    return (
+                      <div
+                        key={c.id}
+                        className={[
+                          "card",
+                          revealed ? "revealed" : "",
+                          isJoker ? "jokerGlow" : "",
+                          isRoyalCard ? "royalGlow" : "",
+                        ].join(" ")}
+                        style={{
+                          padding: "10px 12px",
+                          borderRadius: 12,
+                          border: "1px solid #ccc",
+                          minWidth: 80,
+                          textAlign: "center",
+                          fontWeight: 800,
+                          backgroundColor: "#fafafa",
+                          color: isJoker ? "#065f46" : c.color === "red" ? "#7f1d1d" : "#111827",
+                        }}
+                        title={`${c.rank} of ${c.suit}`}
+                      >
+                        <div style={{ fontSize: 18 }}>{c.label}</div>
+                        <div style={{ fontSize: 12, color: "#475569" }}>{isJoker ? "joker" : c.color}</div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                  const isJoker = c.suit === "joker";
-                  const isRoyalCard = !isJoker && (c.rank === "A" || c.rank === "K" || c.rank === "Q" || c.rank === "J");
-
-                  return (
+                <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
+                    <div style={{ fontSize: 12, color: "#475569" }}>Split</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "#0f172a" }}>{split}</div>
+                  </div>
+                  <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
+                    <div style={{ fontSize: 12, color: "#475569" }}>Payout</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: "#0f172a" }}>£{lastPayout.toFixed(2)}</div>
+                  </div>
+                  <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
+                    <div style={{ fontSize: 12, color: "#475569" }}>Profit</div>
                     <div
-                      key={c.id}
-                      className={[
-                        "card",
-                        revealed ? "revealed" : "",
-                        isJoker ? "jokerGlow" : "",
-                        isRoyalCard ? "royalGlow" : "",
-                      ].join(" ")}
-                      style={{
-                        padding: "10px 12px",
-                        borderRadius: 12,
-                        border: "1px solid #ccc",
-                        minWidth: 80,
-                        textAlign: "center",
-                        fontWeight: 800,
-                        backgroundColor: "#fafafa",
-                        color: isJoker ? "#065f46" : c.color === "red" ? "#7f1d1d" : "#111827",
-                      }}
-                      title={`${c.rank} of ${c.suit}`}
-                    >
-                      <div style={{ fontSize: 18 }}>{c.label}</div>
-                      <div style={{ fontSize: 12, opacity: 0.7 }}>{isJoker ? "joker" : c.color}</div>
+  style={{
+    fontSize: 20,
+    fontWeight: 900,
+    color: lastProfit >= 0 ? "#065f46" : "#7f1d1d", // casino green / deep red
+  }}
+>
+  {lastProfit >= 0 ? "+" : "-"}£{Math.abs(lastProfit).toFixed(2)}
+</div>
+
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ color: "#64748b" }}>Place chips on the board, then press <b>Deal</b>.</div>
+            )}
+
+            <hr style={{ margin: "16px 0", borderColor: "#e5e7eb", opacity: 0.6 }} />
+
+            <h2 style={{ marginTop: 0, marginBottom: 10, fontSize: 18, color: "#0f172a" }}>
+History</h2>
+            {history.length === 0 ? (
+              <div style={{ color: "#475569" }}>No rounds yet.</div>
+
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {history.map((r) => (
+                  <div key={r.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                     <div style={{ fontWeight: 950, color: "#0f172a" }}>{r.betText}</div>
+                      <div style={{ fontSize: 12, color: "#475569" }}>{r.time}</div>
                     </div>
-                  );
-                })}
+                    <div style={{ fontSize: 12, color: "#475569", marginTop: 6 }}>
+                      Stake £{r.stake.toFixed(2)} • Split {r.split}
+                    </div>
+                    <div style={{ fontSize: 12, marginTop: 6, color: "#0f172a" }}>
+  Payout{" "}
+  <b style={{ color: "#0f172a" }}>£{r.payout.toFixed(2)}</b> • Profit{" "}
+  <b style={{ color: r.profit >= 0 ? "#065f46" : "#7f1d1d" }}>
+    {r.profit >= 0 ? "+" : "-"}£{Math.abs(r.profit).toFixed(2)}
+  </b>
+</div>
+
+                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 6 }}>Drawn: {r.drawn.join(", ")}</div>
+                  </div>
+                ))}
               </div>
-
-              <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
-                  <div style={{ fontSize: 12, opacity: 0.7 }}>Split</div>
-                  <div style={{ fontSize: 20, fontWeight: 900 }}>{split}</div>
-                </div>
-                <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
-                  <div style={{ fontSize: 12, opacity: 0.7 }}>Payout</div>
-                  <div style={{ fontSize: 20, fontWeight: 900 }}>£{lastPayout.toFixed(2)}</div>
-                </div>
-                <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 10 }}>
-                  <div style={{ fontSize: 12, opacity: 0.7 }}>Profit</div>
-                  <div style={{ fontSize: 20, fontWeight: 900 }}>
-                    {lastProfit >= 0 ? "+" : "-"}£{Math.abs(lastProfit).toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div style={{ opacity: 0.75 }}>
-              Place chips on the board, then press <b>Deal</b>.
-            </div>
-          )}
-
-          <hr style={{ margin: "16px 0" }} />
-
-          <h2 style={{ marginTop: 0, marginBottom: 10, fontSize: 18 }}>History</h2>
-          {history.length === 0 ? (
-            <div style={{ opacity: 0.75 }}>No rounds yet.</div>
-          ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              {history.map((r) => (
-                <div key={r.id} style={{ border: "1px solid #eee", borderRadius: 12, padding: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                    <div style={{ fontWeight: 900 }}>{r.betText}</div>
-                    <div style={{ fontSize: 12, opacity: 0.7 }}>{r.time}</div>
-                  </div>
-                  <div style={{ fontSize: 12, opacity: 0.8, marginTop: 6 }}>
-                    Stake £{r.stake.toFixed(2)} • Split {r.split}
-                  </div>
-                  <div style={{ fontSize: 12, marginTop: 6 }}>
-                    Payout <b>£{r.payout.toFixed(2)}</b> • Profit{" "}
-                    <b>
-                      {r.profit >= 0 ? "+" : "-"}£{Math.abs(r.profit).toFixed(2)}
-                    </b>
-                  </div>
-                  <div style={{ fontSize: 12, opacity: 0.75, marginTop: 6 }}>Drawn: {r.drawn.join(", ")}</div>
-                </div>
-              ))}
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
 
-      <div style={{ marginTop: 18, fontSize: 12, opacity: 0.7 }}>
-        Note: “Return” is total payout including stake (roulette-style). Jokers are neither red nor black and have no suit.
+        <div style={{ marginTop: 18, fontSize: 12, color: "#475569" }}>
+          Note: “Return” is total payout including stake (roulette-style). Jokers are neither red nor black and have no suit.
+        </div>
       </div>
     </div>
   );
