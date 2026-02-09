@@ -546,7 +546,7 @@ useEffect(() => {
       const ret = RETURNS[bet.type];
       const wins = drawn.reduce((acc, c) => acc + (isWin(c, bet) ? 1 : 0), 0);
 
-      totalPayout += amount * (ret + 1) * (wins / N);
+      totalPayout += amount * (ret - 1) * (wins / N);
 
     }
 
