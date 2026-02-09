@@ -1071,7 +1071,7 @@ History</h2>
       {/* GAME BELOW */}
       {/*
          Everything that was already being returned
-         by your game stays here
+         by your game stays 
       */}
 
     </div>
