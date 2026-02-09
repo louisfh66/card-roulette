@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 
 const chipSound = typeof Audio !== "undefined"
   ? new Audio("/sounds/chip.wav")
@@ -387,6 +389,10 @@ const clickSound = React.useRef<HTMLAudioElement | null>(null);
 const dealSound = React.useRef<HTMLAudioElement | null>(null);
 const winSound = React.useRef<HTMLAudioElement | null>(null);
 const chipSound = React.useRef<HTMLAudioElement | null>(null);
+const MAX_PURCHASED_BALANCE = 15;
+const canBuy5 = balance + 5 <= MAX_PURCHASED_BALANCE;
+const canBuy10 = balance + 10 <= MAX_PURCHASED_BALANCE;
+const router = useRouter();
 
 
 function play(sound: React.RefObject<HTMLAudioElement | null>) {
@@ -1064,8 +1070,13 @@ History</h2>
         Welcome {session?.user?.email}
         <br />
         <button onClick={() => signOut()}>
-          Sign out
+          Sign 
         </button>
+        <button onClick={() => router.push("/credits")}>
+  Credits
+</button>
+
+<h1 style={{ color: "red"}}> TEST MARKER </h1>
       </div>
 
       {/* GAME BELOW */}
